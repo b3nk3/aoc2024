@@ -66,12 +66,12 @@ func TestReportAnalyzer(t *testing.T) {
 			expected: false,
 		},
 		{
-			level:    []int{7, 6, 4, 2, 1},
+			level:    []int{16, 6, 4, 2, 1},
 			expected: true,
 		},
 		{
-			level:    []int{16, 6, 4, 2, 1},
-			expected: false,
+			level:    []int{7, 6, 4, 2, 1},
+			expected: true,
 		},
 		{
 			level:    []int{1, 2, 7, 8, 9},
@@ -84,25 +84,65 @@ func TestReportAnalyzer(t *testing.T) {
 		},
 		{
 			level:    []int{1, 3, 2, 4, 5},
-			expected: false,
+			expected: true,
 		},
 
 		{
 			level:    []int{8, 6, 4, 4, 1},
-			expected: false,
+			expected: true,
 		},
-
 		{
 			level:    []int{1, 3, 6, 7, 9},
+			expected: true,
+		},
+		{
+			level:    []int{29, 28, 27, 25, 26, 25, 22, 20},
+			expected: true,
+		},
+		{
+			level:    []int{48, 46, 47, 49, 51, 54, 56},
+			expected: true,
+		},
+		{
+			level:    []int{1, 1, 2, 3, 4, 5},
+			expected: true,
+		},
+		{ // 1 2 3 4 5 5
+			level:    []int{1, 2, 3, 4, 5, 5},
+			expected: true,
+		},
+		{ // 5 1 2 3 4 5
+			level:    []int{5, 1, 2, 3, 4, 5},
+			expected: true,
+		},
+		{ // 1 4 3 2 1
+			level:    []int{1, 4, 3, 2, 1},
+			expected: true,
+		},
+
+		{ // 1 6 7 8 9
+			level:    []int{1, 6, 7, 8, 9},
+			expected: true,
+		},
+		{ // 1 2 3 4 3
+			level:    []int{1, 2, 3, 4, 3},
+			expected: true,
+		},
+		{ // 9 8 7 6 7
+			level:    []int{9, 8, 7, 6, 7},
+			expected: true,
+		},
+		{ // 7 10 8 10 11
+			level:    []int{7, 10, 8, 10, 11},
 			expected: true,
 		},
 	}
 	// Run all test cases
 	for _, tt := range tests {
-		t.Run("ReportAnalyzer", func(t *testing.T) {
-			got := ReportAnalyzer(tt.level)
+		t.Run("ProblemDampener", func(t *testing.T) {
+			got := ProblemDampener(tt.level)
 			if got != tt.expected {
-				t.Errorf("ReportAnalyzer(%v) = %t; want %t",
+				t.Errorf("ProblemDampener(%v) = %t; want %t",
 					tt.level, got, tt.expected)
 			}
 		})

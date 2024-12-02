@@ -48,7 +48,6 @@ func ReportAnalyzer(levels []int) bool {
 	}
 
 	initialDirection := CompareNumbers(levels[0], levels[1])
-
 	if initialDirection == "equal" {
 		return false
 	}
@@ -57,7 +56,6 @@ func ReportAnalyzer(levels []int) bool {
 
 	// start from the second element
 	for _, level := range levels[1:] {
-
 		// The levels are either all increasing or all decreasing.
 		if initialDirection != CompareNumbers(prevLevel, level) {
 			return false
@@ -71,39 +69,71 @@ func ReportAnalyzer(levels []int) bool {
 		prevLevel = level
 	}
 	return true
+}
 
+func Remove(a []int, index int) []int {
+	return append(a[:index], a[index+1:]...)
+}
+
+func ProblemDampener(levels []int) bool {
+	if levels == nil || len(levels) < 2 {
+		return false
+	}
+
+	// First check if it's already safe without removing any numbers
+	if ReportAnalyzer(levels) {
+		return true
+	}
+
+	// Try removing each number one at a time and check if it becomes safe
+	for i := range levels {
+		// Make a copy of the slice without the current number
+		testLevels := make([]int, len(levels)-1)
+		copy(testLevels, levels[:i])
+		copy(testLevels[i:], levels[i+1:])
+
+		// testLevels := Remove(levels, i)
+		fmt.Println(testLevels, levels)
+		if ReportAnalyzer(testLevels) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func main() {
-	data, err := os.ReadFile("input.tsv")
+	// Read input file
+	data, err := os.ReadFile("input.txt")
 	if err != nil {
-		fmt.Println("Error reading file:", err)
-		os.Exit(1)
+		log.Fatal("Error reading file:", err)
 	}
 
 	// Split into lines
-	lines := strings.Split(string(data), "\n")
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
 
 	safeReports := 0
 	for _, line := range lines {
-		if err != nil {
-			log.Fatal(err)
+		if line == "" {
+			continue
 		}
+
 		// Split line into numbers
 		numStrings := strings.Fields(line)
+		numbers := make([]int, len(numStrings))
 
-		var numbers []int
-		for _, numStr := range numStrings {
+		for i, numStr := range numStrings {
 			num, err := strconv.Atoi(numStr)
 			if err != nil {
-				fmt.Println("Error converting string to int:", err)
-				os.Exit(1)
+				log.Fatal("Error converting string to int:", err)
 			}
-			numbers = append(numbers, num)
+			numbers[i] = num
 		}
-		if ReportAnalyzer(numbers) {
+
+		if ProblemDampener(numbers) {
 			safeReports++
 		}
 	}
-	fmt.Println(safeReports)
+
+	fmt.Println("Safe reports:", safeReports)
 }
