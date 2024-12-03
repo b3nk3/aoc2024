@@ -31,12 +31,25 @@ func MultiPlySliceItems(s []string) int {
 	return result
 }
 
+func FilterOutBlocks(s string) string {
+	// used `don't\(\).*?do\(\)` intitally, but it was not working as expected
+	// so I used `don't\(\).*?do\(\)` and it worked because
+	//
+	// Without (?s), the . matches any character except newline
+	// With (?s), the . matches absolutely any character including newlines
+	// The *? keeps it non-greedy, so it matches the minimum needed between your delimiters
+	re := regexp.MustCompile(`(?s)don't\(\).*?do\(\)`)
+	parts := re.ReplaceAllString(s, "")
+	return parts
+}
+
 func main() {
 	// Read input file
 	data, err := os.ReadFile("input.txt")
 	if err != nil {
 		log.Fatal("Error reading file:", err)
 	}
-	muls := FindMulsWithRegexp(string(data))
+	filteredMuls := FilterOutBlocks(string(data))
+	muls := FindMulsWithRegexp(filteredMuls)
 	fmt.Println(MultiPlySliceItems(muls))
 }
