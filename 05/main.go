@@ -80,6 +80,9 @@ func validateOrder(rules map[int][]int, sequence []int) bool {
 }
 
 func getMiddleNumber(sequence []int) int {
+	if len(sequence)%2 == 0 {
+		return 0
+	}
 	middle := (len(sequence) - 1) / 2
 	return sequence[middle]
 }
@@ -103,71 +106,80 @@ func countInDegrees(rules map[int][]int) map[int]int {
 	inDegrees := map[int]int{}
 
 	for ruleKey := range rules {
-		inDegrees[ruleKey] = 0
-		for _, num := range rules[ruleKey] {
-			inDegrees[num] = 0
-		}
-	}
-	for ruleKey := range rules {
-		for _, num := range rules[ruleKey] {
-			inDegrees[num] += 1
-		}
+		inDegrees[ruleKey] = 0 // Initialize source nodes too
 	}
 
+	for _, destinations := range rules {
+		for _, dest := range destinations {
+			inDegrees[dest]++
+		}
+	}
 	return inDegrees
 }
 
 // fixOrder fixes the order of the sequence
 func fixOrder(rules map[int][]int, sequence []int) []int {
-	inDegrees := countInDegrees(rules)
+	// Create adjacency list representation of the graph
+	graph := make(map[int][]int)
+	for _, num := range sequence {
+		graph[num] = []int{}
+	}
 
-	// make a copy of the sequence
-	// to prevent mutation
-	// I didn't realise this, and without my tests I wouldn't have known
-	remainingInSequence := make([]int, len(sequence))
-	copy(remainingInSequence, sequence)
-
-	fixedSequence := []int{}
-
-	// for len(remainingInSequence) > 0 {
-	for i := len(remainingInSequence); i > 0; i-- {
-		zeroDegrees := []int{}
-
-		for degree := range inDegrees {
-			if inDegrees[degree] == 0 {
-				zeroDegrees = append(zeroDegrees, degree)
-			}
-		}
-
-		fixedSequence = append(fixedSequence, zeroDegrees...)
-		// decrease the in-degree of the numbers that depend on the number
-		for _, degree := range zeroDegrees {
-			for _, num := range rules[degree] {
-				inDegrees[num] -= 1
-			}
-			// delete the number from the in-degrees
-			delete(inDegrees, degree)
-		}
-
-		// remove the fixed numbers from the sequence
-		for i, num := range remainingInSequence {
-			if contains(fixedSequence, num) {
-				remainingInSequence = append(remainingInSequence[:i], remainingInSequence[i+1:]...)
+	// Build edges based on rules that apply to numbers in our sequence
+	for _, num := range sequence {
+		for _, mustComeBefore := range rules[num] {
+			if contains(sequence, mustComeBefore) {
+				graph[num] = append(graph[num], mustComeBefore)
 			}
 		}
 	}
-	return fixedSequence
+
+	// Create in-degree map for Kahn's algorithm
+	inDegree := make(map[int]int)
+	for _, num := range sequence {
+		inDegree[num] = 0
+	}
+	for _, edges := range graph {
+		for _, dest := range edges {
+			inDegree[dest]++
+		}
+	}
+
+	// Find nodes with no incoming edges
+	var queue []int
+	for _, num := range sequence {
+		if inDegree[num] == 0 {
+			queue = append(queue, num)
+		}
+	}
+
+	// Process nodes in topological order
+	var result []int
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		result = append(result, current)
+
+		for _, neighbor := range graph[current] {
+			inDegree[neighbor]--
+			if inDegree[neighbor] == 0 {
+				queue = append(queue, neighbor)
+			}
+		}
+	}
+
+	return result
 }
 
 // sumOfFixedMiddles returns the sum of the middle numbers
 // in the sequences that are fixed
 func sumOfFixedMiddles(rules map[int][]int, invalidSequences [][]int) int {
 	sum := 0
-	fixedSequence := []int{}
 	for _, sequence := range invalidSequences {
-		fmt.Println("Sequence: ", sequence)
-		fixedSequence = fixOrder(rules, sequence)
-		fmt.Println("Fixed sequence: ", fixedSequence)
+		if len(sequence)%2 == 0 {
+			continue // Skip even-length sequences as they don't have a middle
+		}
+		fixedSequence := fixOrder(rules, sequence)
 		sum += getMiddleNumber(fixedSequence)
 	}
 	return sum
@@ -178,11 +190,9 @@ func main() {
 	checkError(err)
 
 	rules, orders := splitOdersAndRules(string(data))
-
 	sum, invalidSequences := sumOfValidMiddlesAndInvalids(rules, orders)
+	fmt.Println("Sum of valid middle numbers: ", sum)
 
 	fixedSum := sumOfFixedMiddles(rules, invalidSequences)
-
-	fmt.Println("Sum of valid middle numbers: ", sum)
 	fmt.Println("Sum of fixed middle numbers: ", fixedSum)
 }
