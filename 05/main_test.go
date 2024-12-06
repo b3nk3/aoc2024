@@ -75,15 +75,77 @@ var orderSet2 = [][]int{
 	{61, 13, 29},
 	{97, 13, 75, 29, 47},
 }
+var invalidOrders = [][]int{
+	{75, 97, 47, 61, 53},
+	{61, 13, 29},
+	{97, 13, 75, 29, 47},
+}
+
+func TestSumOfFixedMiddles(t *testing.T) {
+	t.Run("should return the sum of fixed middles", func(t *testing.T) {
+
+		got := sumOfFixedMiddles(ruleSet2, invalidOrders)
+		wanted := 123
+
+		if got != wanted {
+			t.Errorf("got %v, wanted %v", got, wanted)
+		}
+	})
+}
+
+func TestFixOrder(t *testing.T) {
+	t.Run("should return the fixed order", func(t *testing.T) {
+		rules := ruleSet2
+		sequence := orderSet2[3]
+
+		got := fixOrder(rules, sequence)
+		wanted := []int{97, 75, 47, 61, 53}
+
+		if !reflect.DeepEqual(got, wanted) {
+			t.Errorf("got: %v, wanted: %v", got, wanted)
+		}
+	})
+}
+
+func TestCountInDegrees(t *testing.T) {
+	t.Run("should return the count of in-degrees", func(t *testing.T) {
+		rules := ruleSet2
+
+		got := countInDegrees(rules)
+		wanted := map[int]int{
+			13: 6,
+			29: 5,
+			47: 2,
+			53: 4,
+			61: 3,
+			75: 1,
+			97: 0,
+		}
+
+		if !reflect.DeepEqual(got, wanted) {
+			t.Errorf("got: %v, wanted: %v", got, wanted)
+		}
+	})
+}
 
 func TestSumOfValidOrders(t *testing.T) {
 	t.Run("should return the sum of valid orders", func(t *testing.T) {
 		rules, orders := splitOdersAndRules(input)
 
-		got := sumOfValidMiddles(rules, orders)
+		got, _ := sumOfValidMiddlesAndInvalids(rules, orders)
 		wanted := 143
 
 		if got != wanted {
+			t.Errorf("got %v, wanted %v", got, wanted)
+		}
+	})
+	t.Run("should return the invalid orders", func(t *testing.T) {
+		rules, orders := splitOdersAndRules(input)
+
+		_, got := sumOfValidMiddlesAndInvalids(rules, orders)
+		wanted := invalidOrders
+
+		if !reflect.DeepEqual(got, wanted) {
 			t.Errorf("got %v, wanted %v", got, wanted)
 		}
 	})
